@@ -22,9 +22,9 @@ def with_dampener(lst: list):
     # exhaustive search through lists and check if they are valid when each one is removed
     safe = False
     for i in range(len(lst)):
-        cp: list = list.copy(lst)
-        cp.pop(i)
-        safe = safe or is_valid_list(lst=cp[1:], prev=cp[0], asc=True) or is_valid_list(lst=cp[1:], prev=cp[0], asc=False)
+        copied_list: list = list.copy(lst)
+        copied_list.pop(i)
+        safe = safe or is_valid_list(lst=copied_list[1:], prev=copied_list[0], asc=True) or is_valid_list(lst=copied_list[1:], prev=copied_list[0], asc=False)
 
     return safe
     
