@@ -1,8 +1,8 @@
 # AdventOfCode24
 [Official Site](https://adventofcode.com/)
 
-- [x] day1
-- [x] day2
+- [x] [day1](./day1)
+- [x] [day2](./day2)
 - [ ] day3
 - [ ] day4
 - [ ] day5
