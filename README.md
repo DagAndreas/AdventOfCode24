@@ -1,6 +1,6 @@
 # AdventOfCode25
 - [x] day1
-- [ ] day2
+- [x] day2
 - [ ] day3
 - [ ] day4
 - [ ] day5
