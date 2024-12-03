@@ -3,7 +3,7 @@
 
 - [x] [day1](./day1)
 - [x] [day2](./day2)
-- [ ] day3
+- [x] [day3](./day3)
 - [ ] day4
 - [ ] day5
 - [ ] day6
