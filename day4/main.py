@@ -73,3 +73,5 @@ for i in range(1, vertLength):
 
 
 print(f'{sum=}')
+
+# star1: 2685
