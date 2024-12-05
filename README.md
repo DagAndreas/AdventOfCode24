@@ -5,7 +5,7 @@
 - [x] [day2](./day2)
 - [x] [day3](./day3)
 - [x] [day4](./day4)
-- [ ] day5
+- [x] [day5](./day5)
 - [ ] day6
 - [ ] day7
 - [ ] day8
@@ -25,3 +25,4 @@
 - [ ] day22
 - [ ] day23
 - [ ] day24
+
