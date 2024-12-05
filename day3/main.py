@@ -31,7 +31,6 @@ def parse_num(line: str, index: int) -> tuple[int, int, str]:
 
 
 def parse_pran(line: str, index: int) -> int:
-
     num1 = None
     num2 = None
     # parse number and get next index
