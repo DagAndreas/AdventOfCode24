@@ -1,8 +1,5 @@
-import enum 
-test = 'xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]'
 test = 'xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))'
 
-legal_characters = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, '(', ')', ',']
 legal_nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 do = True
@@ -11,9 +8,6 @@ def is_num(c: str):
         return int(c) in legal_nums
     except TypeError:
         return False
-
-def is_valid(c: str) -> bool:
-    return c in legal_characters
 
 def parse_num(line: str, index: int) -> tuple[int, int, str]:
     # can max be 3 numbers
