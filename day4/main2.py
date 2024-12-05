@@ -69,7 +69,7 @@ for i in range(vertical_length):
 print(f'{total=}')
 
 
-
+# star2: 2048
 
     
 
