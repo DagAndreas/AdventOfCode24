@@ -63,6 +63,10 @@ func find_negative_nodes(board []string) [][]bool {
 			}
 		}
 	}
+
+	for i := range markboard {
+		fmt.Println(markboard[i])
+	}
 	return markboard
 }
 
@@ -103,24 +107,24 @@ func antenna_found(row int, column int, antenna_type byte, board []string, markb
 				fmt.Println("add row ", add_neg_node_x, " bottom ", bottom_limit)
 				fmt.Println("add col ", add_neg_node_y, " top ", top_limit)
 
-				if add_neg_node_x <= bottom_limit {
-					fmt.Println("add_neg_node_x <= bottom_limit")
-				}
-				if add_neg_node_x >= top_limit {
-					fmt.Println("add_neg_node_x >= top_limit")
-				}
-				if add_neg_node_y >= left_limit {
-					fmt.Println("add_neg_node_y >= left_limit")
-				}
-				if add_neg_node_y <= right_limit {
-					fmt.Println("add_neg_node_y <= right_limit")
-				}
+				within_bounds := add_neg_node_x <= bottom_limit && add_neg_node_x >= top_limit && add_neg_node_y >= left_limit && add_neg_node_y <= right_limit
 
-				if add_neg_node_x <= bottom_limit && add_neg_node_x >= top_limit && add_neg_node_y >= left_limit && add_neg_node_y <= right_limit {
+				for within_bounds {
 					fmt.Println("marking ", add_neg_node_x, ",", add_neg_node_y, " as negative pos node")
 					markboard[add_neg_node_x][add_neg_node_y] = true
+					add_neg_node_x += i - row
+					add_neg_node_y += j - column
+					fmt.Println("add row ", add_neg_node_x, " bottom ", bottom_limit)
+					fmt.Println("add col ", add_neg_node_y, " top ", top_limit)
 
+					within_bounds = add_neg_node_x <= bottom_limit && add_neg_node_x >= top_limit && add_neg_node_y >= left_limit && add_neg_node_y <= right_limit
+					if !within_bounds {
+						fmt.Println("out of bounds. Breaking")
+					}
 				}
+
+				markboard[i][j] = true
+				markboard[row][column] = true
 			}
 		}
 	}
@@ -129,3 +133,4 @@ func antenna_found(row int, column int, antenna_type byte, board []string, markb
 }
 
 // star 1: 249
+// star 2: 905
