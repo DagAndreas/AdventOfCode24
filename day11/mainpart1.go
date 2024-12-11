@@ -11,29 +11,6 @@ import (
 
 type stone = uint64
 
-func add_to_map(m map[stone]stone, key stone) map[stone]stone {
-	// check if value exists
-	val, ok := m[key]
-	if ok {
-		m[key] = val + 1
-		return m
-	}
-
-	m[key] = 1
-	return m
-
-}
-
-func add_mult_to_map(m map[stone]stone, key stone, values stone) map[stone]stone {
-	val, ok := m[key]
-	if ok {
-		m[key] = val + values
-	} else {
-		m[key] = values
-	}
-	return m
-}
-
 // todo: create a hashmap
 func main() {
 	path_name := "test.txt"
@@ -51,46 +28,46 @@ func main() {
 
 	// lets create the input into a list of integers
 	splt := strings.Split(input, " ")
-	// var start_nums []stone
-	start_nums := make(map[stone]stone)
+	var start_nums []stone
 	for i := range splt {
 		value, _ := strconv.ParseInt(splt[i], 10, 64)
-		start_nums = add_to_map(start_nums, uint64(value))
+		start_nums = append(start_nums, uint64(value))
 	}
 
 	result := find_all_stones(start_nums, 75)
 	fmt.Println("result: ", result)
-
 }
 
-func find_all_stones(stones_map map[stone]stone, iterations int) stone {
+func find_all_stones(stones_list []stone, iterations int) int {
 	for i := range iterations {
-		stones_map = blink(stones_map)
-		fmt.Println("starting iteration ", i)
-	}
+		stones_list = blink(stones_list)
 
+		largest := stone(0)
+		for j := range stones_list {
+			if stones_list[j] > largest {
+				largest = stones_list[j]
+			}
+		}
+		fmt.Println("largest stone for iteration ", i, " is ", largest)
+	}
 	// fmt.Println(stones_list)
-	// sum up the values from the map
-	var sum stone
-	for _, value := range stones_map {
-		sum += value
-	}
-
-	return sum
+	return len(stones_list)
 }
 
-func blink(stones_map map[stone]stone) map[stone]stone {
-	temp_map := make(map[stone]stone)
-	for key, val := range stones_map {
+func blink(stones_list []stone) []stone {
+	var temp_lst []stone
+	for i := range stones_list {
+
+		curr_value := stones_list[i]
 
 		// rule 1
-		if key == 0 {
-			temp_map = add_mult_to_map(temp_map, 1, val)
+		if curr_value == 0 {
+			temp_lst = append(temp_lst, 1)
 			continue
 		}
 
 		amount_of_digits := 1
-		digits_value := key
+		digits_value := stone(stones_list[i])
 		for digits_value > 9 {
 			digits_value = digits_value / 10
 			amount_of_digits++
@@ -101,20 +78,20 @@ func blink(stones_map map[stone]stone) map[stone]stone {
 		if is_even_digits {
 			// split into two.
 			// first get the first two numbers
-			first_num, second_num := split_even(key, amount_of_digits)
-			temp_map = add_mult_to_map(temp_map, first_num, val)
-			temp_map = add_mult_to_map(temp_map, second_num, val)
+			first_num, second_num := split_even(curr_value, amount_of_digits)
+			temp_lst = append(temp_lst, first_num)
+			temp_lst = append(temp_lst, second_num)
 			continue
 		}
 
 		if !is_even_digits {
 			multiply_val := 2024
-			new_key := key * stone(multiply_val)
-			temp_map = add_mult_to_map(temp_map, new_key, val)
+			new_val := curr_value * stone(multiply_val)
+			temp_lst = append(temp_lst, new_val)
 		}
 	}
 
-	return temp_map
+	return temp_lst
 }
 
 func split_even(value stone, digits int) (stone, stone) {
@@ -148,4 +125,3 @@ func split_even(value stone, digits int) (stone, stone) {
 }
 
 // star 1: 193899
-// star 2: 229682160383225
