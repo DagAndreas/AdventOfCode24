@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
 func main() {
 
-	file, err := os.Open("input.txt")
+	file, err := os.Open("test.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,15 +26,16 @@ func main() {
 	}
 
 	// now we can begin mapping out what we want to happen
-	guard_on_board := is_guard_on_board(board)
-	for guard_on_board {
+	guard_visited_map := make(map[string]Direction)
+	var loop bool
+	for is_guard_on_board(board) {
 		// let's get the position and direction
-		for i := 0; i < len(board); i++ {
-			// fmt.Println(board[i])
+		board, guard_visited_map, loop = guard_update(board, guard_visited_map)
+		if loop {
+			fmt.Println("guard looped board!!!\n ")
+			break
 		}
-		board = guard_update(board)
-		// fmt.Println("Updated board")
-		guard_on_board = is_guard_on_board(board)
+
 	}
 	fmt.Println("done checking board.")
 	for i := 0; i < len(board); i++ {
@@ -42,6 +44,38 @@ func main() {
 
 	sum := count_x_on_board(board)
 	fmt.Println(sum)
+	// we want to iterate over the entire board.
+
+	guard_looping_forever_count := 0
+	for i, row := range board {
+		for j, char := range row {
+			if char == 'X' {
+				fmt.Println("replacing on (", i, ",", j, ") with #")
+
+				// replace char
+				new_map := make(map[string]Direction)
+				new_row := replace_char_in_string(row, j, '#')
+				new_board := replace_line_on_board(board, new_row, i)
+				var looped bool
+				fmt.Println("lets see if the guard is on the board:", is_guard_on_board(new_board))
+				for is_guard_on_board(new_board) {
+					new_board, new_map, looped = guard_update(new_board, new_map)
+					fmt.Println("new map", new_map)
+
+					if looped {
+						guard_looping_forever_count++
+						fmt.Println("guard DID loop")
+						break
+					}
+				}
+				for _, row := range new_board {
+					fmt.Println(row)
+				}
+			} else {
+			}
+		}
+	}
+	fmt.Println("there are ", guard_looping_forever_count, "spots to place an obstacle for the guard to make him loop")
 }
 
 type Direction int
@@ -55,7 +89,7 @@ const (
 	None
 )
 
-func guard_update(board []string) []string {
+func guard_update(board []string, guard_visited_map map[string]Direction) ([]string, map[string]Direction, bool) {
 	left_limit := 0
 	top_limit := 0
 	bottom_limit := len(board) - 1
@@ -64,11 +98,29 @@ func guard_update(board []string) []string {
 	for i := 0; i < len(board); i++ {
 		row := board[i]
 
-		// guard going up
 		pos, direction := guard_is_in_row(row)
 		if direction == None {
+			fmt.Println("no direction. Not where the guard is. in pos=", pos, ". row=", row, " dir=", direction)
 			continue
+		} else {
+			fmt.Println("guard facing ", direction, " in ", i, ", ", pos)
 		}
+		// fmt.Println("update in ", i, ", ", pos)
+
+		// let's check if the guard has been here before.
+		// create the key
+
+		// check if key in map
+		key := strconv.Itoa(i) + "," + strconv.Itoa(pos) + "," + strconv.Itoa(int(direction))
+		_, ok := guard_visited_map[key]
+		fmt.Println("key=", key, " and ok=", ok)
+		if ok {
+			return board, guard_visited_map, true
+		} else {
+			guard_visited_map[key] = direction
+		}
+
+		//
 
 		//guard is in row
 		// mark current position
@@ -80,8 +132,15 @@ func guard_update(board []string) []string {
 		switch direction {
 		case UP:
 			if check_for_obstacle_ahead(board, i-1, pos) {
-				new_row := replace_char_in_string(row, pos+1, '>')
-				board = replace_line_on_board(board, new_row, i)
+				// check for obstacle on the next corner.
+				if check_for_obstacle_ahead(board, i, pos+1) {
+					// turn 180 degrees back
+					new_row := replace_char_in_string(row, pos, 'v')
+					board = replace_line_on_board(board, new_row, i)
+				} else {
+					new_row := replace_char_in_string(row, pos+1, '>')
+					board = replace_line_on_board(board, new_row, i)
+				}
 				break
 			}
 			if i > top_limit {
@@ -93,8 +152,13 @@ func guard_update(board []string) []string {
 			}
 		case DOWN:
 			if check_for_obstacle_ahead(board, i+1, pos) {
-				new_row := replace_char_in_string(row, pos-1, '<')
-				board = replace_line_on_board(board, new_row, i)
+				if check_for_obstacle_ahead(board, i, pos-1) {
+					new_row := replace_char_in_string(row, pos, '^')
+					board = replace_line_on_board(board, new_row, i)
+				} else {
+					new_row := replace_char_in_string(row, pos-1, '<')
+					board = replace_line_on_board(board, new_row, i)
+				}
 				break
 			}
 			if i < bottom_limit {
@@ -104,8 +168,13 @@ func guard_update(board []string) []string {
 		case RIGHT:
 			if check_for_obstacle_ahead(board, i, pos+1) {
 				// will never be on the bottom-row and walk right. Against rules
-				new_row := replace_char_in_string(board[i+1], pos, 'v')
-				board = replace_line_on_board(board, new_row, i+1)
+				if check_for_obstacle_ahead(board, i+1, pos) {
+					new_row := replace_char_in_string(row, pos, '<')
+					board = replace_line_on_board(board, new_row, i)
+				} else {
+					new_row := replace_char_in_string(board[i+1], pos, 'v')
+					board = replace_line_on_board(board, new_row, i+1)
+				}
 				break
 			}
 			// no obstacle
@@ -115,8 +184,13 @@ func guard_update(board []string) []string {
 			}
 		case LEFT:
 			if check_for_obstacle_ahead(board, i, pos-1) {
-				new_row := replace_char_in_string(board[i-1], pos, '^')
-				board = replace_line_on_board(board, new_row, i-1)
+				if check_for_obstacle_ahead(board, i-1, pos) {
+					new_row := replace_char_in_string(row, pos, '>')
+					board = replace_line_on_board(board, new_row, i)
+				} else {
+					new_row := replace_char_in_string(board[i-1], pos, '^')
+					board = replace_line_on_board(board, new_row, i-1)
+				}
 				break
 			}
 			// no obstacle
@@ -130,7 +204,7 @@ func guard_update(board []string) []string {
 		break
 	}
 
-	return board
+	return board, guard_visited_map, false
 }
 
 func count_x_on_board(board []string) int {
