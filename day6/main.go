@@ -27,7 +27,6 @@ func main() {
 	// now we can begin mapping out what we want to happen
 	guard_on_board := is_guard_on_board(board)
 	for guard_on_board {
-		// fmt.Println("Updating board")
 		// let's get the position and direction
 		for i := 0; i < len(board); i++ {
 			// fmt.Println(board[i])
@@ -36,13 +35,6 @@ func main() {
 		// fmt.Println("Updated board")
 		guard_on_board = is_guard_on_board(board)
 	}
-	// new_board := replace_line_on_board(board, "dag", 1)
-
-	// for i := 0; i < len(new_board); i++ {
-	// 	fmt.Println("new board: " + new_board[i])clea
-	// }
-	// board = new_board
-
 	fmt.Println("done checking board.")
 	for i := 0; i < len(board); i++ {
 		fmt.Println(board[i])
@@ -80,9 +72,7 @@ func guard_update(board []string) []string {
 
 		//guard is in row
 		// mark current position
-		// fmt.Println("before marking guard: " + board[i])
 		new_row := replace_char_in_string(row, pos, 'X')
-		// fmt.Println("marking guard:" + new_row)
 		board = replace_line_on_board(board, new_row, i)
 		row = board[i]
 
@@ -90,23 +80,15 @@ func guard_update(board []string) []string {
 		switch direction {
 		case UP:
 			if check_for_obstacle_ahead(board, i-1, pos) {
-				// fmt.Println("obstacle ahead.")
-				// fmt.Println(board[i-1])
-				// fmt.Println(board[i])
 				new_row := replace_char_in_string(row, pos+1, '>')
-				// fmt.Println("new row " + new_row)
 				board = replace_line_on_board(board, new_row, i)
 				break
 			}
-			// fmt.Println("no obstacle ahead.")
 			if i > top_limit {
-				// fmt.Println("not reached top.")
 				new_row := replace_char_in_string(board[i-1], pos, '^') // one row up, same column. icon: ^
-				// fmt.Println("swapping row with: " + new_row)
-				board = replace_line_on_board(board, new_row, i-1) // swap the new row into the board.
+				board = replace_line_on_board(board, new_row, i-1)      // swap the new row into the board.
 
 				for j := 0; j < len(board); j++ {
-					// fmt.Println("b: " + board[j])
 				}
 			}
 		case DOWN:
@@ -140,9 +122,7 @@ func guard_update(board []string) []string {
 			// no obstacle
 			// if not out of bounds, write the new position
 			if i >= left_limit {
-				// fmt.Println("case left: \n" + board[i])
 				new_row := replace_char_in_string(board[i], pos-1, '<')
-				// fmt.Println("new row: \n" + new_row)
 				board = replace_line_on_board(board, new_row, i)
 			}
 		}
@@ -188,7 +168,6 @@ func replace_line_on_board(board []string, line string, index int) []string {
 }
 
 func replace_char_in_string(s string, index int, char rune) string {
-	// fmt.Println("changing board: " + s)
 	if index < 0 || index >= len(s) {
 		// out of range. just return string
 		// help with out of bound for guard
@@ -197,7 +176,6 @@ func replace_char_in_string(s string, index int, char rune) string {
 
 	runes := []rune(s)
 	runes[index] = char
-	// fmt.Println("into: " + string(runes))
 	return string(runes)
 }
 
