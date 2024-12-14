@@ -41,11 +41,11 @@ func main() {
 		fmt.Println("row =", row)
 	}
 
-	result := get_fence_cost(board)
+	result := get_total_fence_cost(board)
 	fmt.Println("result=", result)
 }
 
-func get_fence_cost(board [][]rune) int {
+func get_total_fence_cost(board [][]rune) int {
 	// create a map of visited
 	visited_tile := make(map[Coord]bool)
 	sum := 0
@@ -58,7 +58,6 @@ func get_fence_cost(board [][]rune) int {
 			}
 			_, ok := visited_tile[key]
 			if ok {
-				fmt.Println("already visited ", key)
 				continue
 			}
 			fmt.Println("visiting coord=", key)
@@ -78,7 +77,6 @@ func get_fence_cost(board [][]rune) int {
 
 func get_region(board [][]rune, visited_tiles map[Coord]bool, cord Coord) (map[Coord]bool, map[Coord]bool) {
 	current_region := make(map[Coord]bool)
-	fmt.Println("getting region from ", cord)
 	region_value := board[cord.row][cord.column]
 	current_region, visited_tiles = traverse_from_cord(board, cord, current_region, visited_tiles, region_value)
 
@@ -89,33 +87,127 @@ func get_region(board [][]rune, visited_tiles map[Coord]bool, cord Coord) (map[C
 	return visited_tiles, current_region
 }
 
-func fence_cost_for_region(region map[Coord]bool) int {
-	inner := 0
-	perimeter := 0
+type Direction int
+
+const (
+	UP Direction = iota
+	DOWN
+	LEFT
+	RIGHT
+)
+
+type Fence struct {
+	cord      Coord
+	direction Direction
+}
+
+func get_edges_from_region(region map[Coord]bool) map[Fence]bool {
+	fence_map := make(map[Fence]bool)
+	var fence Fence
+	var cord Coord
 	for key, _ := range region {
-		inner++
-		// check all sides if they are in region. If they are not, then inc fence
 
-		perimeter += add_if_boundary_of_region(region, Coord{
-			row:    key.row,
-			column: key.column - 1,
-		})
-
-		perimeter += add_if_boundary_of_region(region, Coord{
-			row:    key.row,
-			column: key.column + 1,
-		})
-
-		perimeter += add_if_boundary_of_region(region, Coord{
+		cord = Coord{
 			row:    key.row - 1,
 			column: key.column,
-		})
+		}
 
-		perimeter += add_if_boundary_of_region(region, Coord{
-			row:    key.row + 1,
-			column: key.column,
-		})
+		_, ok := region[cord]
+		if !ok {
+			fence = Fence{
+				cord:      key,
+				direction: UP,
+			}
+			fence_map[fence] = true
+		}
+
+		cord = Coord{row: key.row + 1, column: key.column}
+		_, ok = region[cord]
+		if !ok {
+			fence = Fence{
+				cord:      key,
+				direction: DOWN,
+			}
+			fence_map[fence] = true
+		}
+
+		cord = Coord{row: key.row, column: key.column - 1}
+		_, ok = region[cord]
+		if !ok {
+			fence = Fence{
+				cord:      key,
+				direction: LEFT,
+			}
+			fence_map[fence] = true
+		}
+
+		cord = Coord{row: key.row, column: key.column + 1}
+		_, ok = region[cord]
+		if !ok {
+			fence = Fence{
+				cord:      key,
+				direction: RIGHT,
+			}
+			fence_map[fence] = true
+		}
 	}
+
+	return fence_map
+}
+
+func traverse_and_remove_fence_sides(fence_map map[Fence]bool, fence Fence) map[Fence]bool {
+	fmt.Println("Inside traverse with len ", len(fence_map), " from ", fence)
+	delete(fence_map, fence)
+	fmt.Println("deleted the fence. Now the len is ", len(fence_map))
+
+	// now let's begin removing matching sides.
+	switch fence.direction {
+	case UP, DOWN:
+		fmt.Println("The fence direction is ", fence.direction, " up or down")
+		fence_map = delete_fence_if_exits(fence_map, fence, 0, -1)
+		fence_map = delete_fence_if_exits(fence_map, fence, 0, 1)
+	case LEFT, RIGHT:
+		fmt.Println("The fence direction is ", fence.direction, " left or right")
+		fence_map = delete_fence_if_exits(fence_map, fence, -1, 0)
+		fence_map = delete_fence_if_exits(fence_map, fence, 1, 0)
+	}
+	return fence_map
+}
+func delete_fence_if_exits(fence_map map[Fence]bool, fence Fence, row_mod int, column_mod int) map[Fence]bool {
+	check_fence := Fence{
+		cord: Coord{
+			row:    fence.cord.row + row_mod,
+			column: fence.cord.column + column_mod,
+		},
+		direction: fence.direction,
+	}
+	_, ok := fence_map[check_fence]
+	if ok {
+		fmt.Println("There was a neighbouring node. Let's remove it to not count that side any more.")
+		fence_map = traverse_and_remove_fence_sides(fence_map, check_fence)
+	} else {
+		fmt.Println("there was no side at ", check_fence)
+	}
+	return fence_map
+}
+
+func fence_cost_for_region(region map[Coord]bool) int {
+	inner := 0
+	inner += len(region)
+
+	perimeter := 0
+	fence_map := get_edges_from_region(region)
+	for len(fence_map) > 0 {
+		fmt.Println("length of fence_map =", len(fence_map))
+		perimeter++
+		var key Fence
+		for key = range fence_map { // cant do a range on map if we mutate it. Instead consume only one key at a time until the length is zero
+			break
+		}
+		fmt.Println("traversing ", key, "\n ")
+		fence_map = traverse_and_remove_fence_sides(fence_map, key)
+	}
+
 	fmt.Println("inner =", inner, ", perimeter=", perimeter)
 	return inner * perimeter
 }
@@ -137,32 +229,27 @@ func traverse_from_cord(board [][]rune, cord Coord, current_region map[Coord]boo
 
 	_, ok := visited_tiles[cord]
 	if ok {
-		fmt.Println("already visited from previous run ", cord)
 		return current_region, visited_tiles
 	}
 
 	_, ok = current_region[cord]
 	if ok {
-		fmt.Println("current region already visited this run ")
 		return current_region, visited_tiles
 	}
 
 	row := cord.row
 	if row > bottom_limit || row < top_limit {
-		fmt.Println("row is out of scope ", cord)
 		return current_region, visited_tiles
 	}
 
 	column := cord.column
 	if column < left_limit || column > right_limit {
-		fmt.Println("column is out of scope")
 		return current_region, visited_tiles
 	}
 
 	// within boundaries
 	cord_value := board[row][column]
 	if cord_value != reg_value {
-		println("Looking region ", string(reg_value), " but found ", string(cord_value))
 		return current_region, visited_tiles
 	}
 
@@ -194,3 +281,34 @@ func traverse_from_cord(board [][]rune, cord Coord, current_region map[Coord]boo
 
 	return current_region, visited_tiles
 }
+
+// func fence_cost_for_region_star1(region map[Coord]bool) int {
+// 	inner := 0
+// 	perimeter := 0
+// 	for key, _ := range region {
+// 		inner++
+// 		// check all sides if they are in region. If they are not, then inc fence
+
+// 		perimeter += add_if_boundary_of_region(region, Coord{
+// 			row:    key.row,
+// 			column: key.column - 1,
+// 		})
+
+// 		perimeter += add_if_boundary_of_region(region, Coord{
+// 			row:    key.row,
+// 			column: key.column + 1,
+// 		})
+
+// 		perimeter += add_if_boundary_of_region(region, Coord{
+// 			row:    key.row - 1,
+// 			column: key.column,
+// 		})
+
+// 		perimeter += add_if_boundary_of_region(region, Coord{
+// 			row:    key.row + 1,
+// 			column: key.column,
+// 		})
+// 	}
+// 	fmt.Println("inner =", inner, ", perimeter=", perimeter)
+// 	return inner * perimeter
+// }
