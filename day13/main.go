@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -43,33 +42,58 @@ func main() {
 	fmt.Println("result: ", total_tokens)
 }
 
+// fuck Gauss-Jordan. We ballin with Cramer's Rule
+// so to Professor Dave Explains
 func check_if_possible(a Button, b Button, p Prize) int64 {
-	max_a_x := p.x / a.x
-	max_a_y := p.y / a.y
-	max_a := int64(math.Min(float64(max_a_x), float64(max_a_y)))
+	// det(A) = ad - bc for any 2x2 matrix.
+	// given the matrix:
+	// [a.x, a.y
+	//	b.x, b.y
+	//]
 
-	max_b_x := p.x / b.x
-	max_b_y := p.y / b.y
-	max_b := int64(math.Min(float64(max_b_x), float64(max_b_y)))
+	// x1 + 3x2 = 5
+	// 2x1 + 2x2 = 6
 
-	min_cost := int64(math.MaxInt64) // Initialize to a large number
-	found := false
+	// a.x + b.x = p.x
+	// a.y + b.y = p.y
 
-	for i := int64(0); i <= max_b; i++ {
-		for j := int64(0); j <= max_a; j++ {
-			if a.x*j+b.x*i == p.x && a.y*j+b.y*i == p.y {
-				cost := int64(3)*j + int64(1)*i
-				if cost < min_cost {
-					min_cost = cost
-				}
-				found = true
-			}
-		}
+	// |A|
+	determanent := a.x*b.y - a.y*b.x
+	if determanent == 0 {
+		return 0
 	}
-	if found {
-		return min_cost
+
+	// now to set up the different matrixes we use with det
+
+	// matrix on top:
+	// |A1| = p.x, b.x
+	//		  p.y, b.y
+	determanent_of_b := p.x*b.y - p.y*b.x
+
+	// solve x1 = |A1|
+	//           ------
+	//            |A|
+	x1 := determanent_of_b / determanent
+	if determanent_of_b%determanent != 0 {
+		return 0 // no solution
 	}
-	return 0
+
+	// now we replace the second column, because we are solving for the second variable.
+	// |A2| = a.x, p.x
+	//	      a.y, p.y
+	determanent_of_a := a.x*p.y - a.y*p.x
+	x2 := determanent_of_a / determanent
+	if determanent_of_a%determanent != 0 {
+		return 0
+	}
+
+	// solution, x1 a buttons and x2 b buttons.
+	cost := int64(x1*3 + x2*1)
+	if cost <= 0 {
+		return 0
+	}
+
+	return cost
 }
 
 func try_combination(a Button, i int64, b Button, j int64, p Prize) bool {
